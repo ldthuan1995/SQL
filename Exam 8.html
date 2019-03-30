@@ -1,0 +1,104 @@
+create database SELL_MANAGE 
+
+create table Category
+(
+	CategoryID char(10) Primary key,
+	CategoryName varchar(50) NOT NULL
+)
+
+create table product
+(
+	ProductID char(10) Primary Key,
+	ProductName varchar(50) NOT NULL,
+	stock int NOT NULL check(stock>=0),
+	selling_price int NOT NULL check(selling_price>=0),
+	Description varchar(200),
+	CategoryID char(10) NOT NULL foreign key references Category(CategoryID) 
+)
+create table customer
+(
+	CustomerID char(10) Primary key,
+	CustomerName varchar(50) NOT NULL,
+	Tel nchar(15),
+	Address varchar(100)
+)
+
+create table orders
+(
+	OrderID int Primary key identity,
+	CustomerID char(10) NOT NULL foreign key references customer(CustomerID),
+	OrderDate datetime default(getdate()) NOT NULL,
+	DeliveryDate datetime NOT NULL, 
+	constraint rangbuoc CHECK(DeliveryDate>=OrderDate)
+)
+
+create table Orderdetail
+(
+	OrderID int foreign key references orders(OrderID),
+	ProductID char(10)foreign key references product(ProductID),
+	buying_qty int default(0) NOT NULL,
+	Primary key(OrderID,ProductID) 
+)
+--Q2
+insert into customer values('KH01','HUA DI KHANG','0909900999','I District, HCM city')
+insert into customer values('KH02','QUACH TIEU KIEM','0713882883','NINH KIEU District, CANTHO city')
+insert into customer values('KH03','DI TIEU BAO','07108777111','OMON District, CANTHO city')
+insert into customer values('KH04','TRAN KHAI TAM','0913123321','PHUNHUAN District, HCM city')
+
+insert into orders values('KH01','9/25/2007','9/30/2007')
+insert into orders values('KH02','9/28/2007','10/5/2007')
+insert into orders values('KH03','10/1/2007','10/7/2007')
+insert into orders values('KH04','10/3/2007','10/7/2007')
+insert into orders values('KH03','10/3/2007','10/9/2007')
+
+insert into Category values('ML01','HONDA')
+insert into Category values('ML02','YAMAHA')
+insert into Category values('ML03','SUZUKI')
+
+insert into Product values('SP01','WAVE ZX',20,14000000,'MADE IN VIETNAM, 100 CUBIC CENTIMETRES','ML01')
+insert into Product values('SP02','JUPITER MX',10,22500000,'MADE IN JAPAN, 110 CUBIC CENTIMETRES','ML02')
+insert into Product values('SP03','VIVA SUZUKI',15,19000000,'MADE IN JAPAN, 110 CUBIC CENTIMETRES','ML03')
+insert into Product values('SP04','CLICK',30,25000000,'MADE IN VIETNAM, 125 CUBIC CENTIMETRES','ML01')
+insert into Product values('SP05','EXITER',12,29400000,'MADE IN JAPAN, 135 CUBIC CENTIMETRES','ML02')
+
+insert into Orderdetail values(1,'SP01',2)
+insert into Orderdetail values(1,'SP02',2)
+insert into Orderdetail values(2,'SP01',3)
+insert into Orderdetail values(2,'SP03',5)
+insert into Orderdetail values(2,'SP04',1)
+insert into Orderdetail values(3,'SP02',5)
+insert into Orderdetail values(4,'SP04',2)
+insert into Orderdetail values(4,'SP05',2)
+insert into Orderdetail values(5,'SP03',3)
+--3
+--a
+select * from dbo.Customer
+where  Address like '%HCM CITY%'
+
+--b
+select * from dbo.Orders
+where month(orderDate)=10 
+
+--c
+select ProductID, ProductName, stock, selling_price from dbo.Product a, dbo.Category b
+where a.CategoryID = b.CategoryID and b.CategoryName='YAMAHA' 
+and a.selling_price >20000000
+--d
+select OrderID,a.CustomerID,CustomerName,datediff(dd,orderDate,deliveryDate) as 'number of delivery'
+from dbo.Orders a, dbo.Customer b
+where a.CustomerID = b.CustomerID
+
+--e
+select a.ProductID,ProductName, sum(buying_qty) as 'amount of selling'
+from  dbo.Product a,dbo.OrderDetail  b
+where a.ProductID = b.ProductID
+group by a.ProductID,ProductName
+having sum(buying_qty)>5
+
+--f
+create view cus_order_vw as
+select OrderId, c.CustomerId, CustomerName, OrderDate, deliveryDate
+from customer c, orders o
+where c.CustomerID=o.CustomerID
+
+select * from cus_order_vw
